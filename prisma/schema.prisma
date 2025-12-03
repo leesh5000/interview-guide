@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions InterviewQuestion[]
+}
+
+model TargetRole {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InterviewQuestion {
+  id             String   @id @default(uuid())
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+
+  // 질문 정보
+  questionTitle  String              // 질문 제목
+  questionBody   String   @db.Text   // 질문 본문 (의도, 평가포인트 등 - 마크다운)
+  answerContent  String   @db.Text   // 답변 내용 (마크다운)
+
+  // 메타 정보
+  targetRoles    String[]            // 대상: ["공통", "백엔드 개발자", "DB 엔지니어"]
+  tags           String[]            // 태그: ["인덱스", "쿼리최적화", "Explain"]
+
+  // AI 및 강의
+  aiSummary      String?             // AI 생성 요약
+  relatedCourses Json     @default("[]") // [{title: string, affiliateUrl: string}]
+
+  // 상태
+  viewCount      Int      @default(0)
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isPublished])
+}
