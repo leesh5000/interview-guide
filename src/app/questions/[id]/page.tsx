@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
@@ -75,9 +76,10 @@ export default async function QuestionDetailPage({
         {/* Back Link */}
         <Link
           href="/questions"
-          className="text-blue-600 dark:text-blue-400 hover:underline mb-6 inline-block"
+          className="text-blue-600 dark:text-blue-400 hover:underline mb-6 inline-flex items-center gap-1"
         >
-          &larr; 질문 목록으로
+          <ArrowLeft className="h-4 w-4" />
+          질문 목록으로
         </Link>
 
         {/* Category Title */}
@@ -166,9 +168,10 @@ export default async function QuestionDetailPage({
                       href={course.affiliateUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
                     >
-                      {course.title} &rarr;
+                      {course.title}
+                      <ArrowRight className="h-4 w-4" />
                     </a>
                   </li>
                 ))}

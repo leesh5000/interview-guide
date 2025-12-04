@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -91,8 +92,9 @@ export default async function Home() {
                   <CardDescription className="text-gray-500 dark:text-gray-400">{category.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <span className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                    질문 보기 &rarr;
+                  <span className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
+                    질문 보기
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 </CardContent>
               </Card>
@@ -120,8 +122,9 @@ export default async function Home() {
                   <CardDescription className="text-gray-500 dark:text-gray-400">{role.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <span className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                    질문 보기 &rarr;
+                  <span className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
+                    질문 보기
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 </CardContent>
               </Card>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
@@ -234,7 +235,10 @@ export default async function QuestionsPage({
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                       <span>조회수 {q.viewCount}</span>
-                      <span>자세히 보기 &rarr;</span>
+                      <span className="inline-flex items-center gap-1">
+                        자세히 보기
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
