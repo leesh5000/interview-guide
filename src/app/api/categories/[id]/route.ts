@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 
@@ -47,6 +48,10 @@ export async function PUT(
       },
     });
 
+    // 캐시 재검증: 홈페이지와 질문 목록 페이지
+    revalidatePath("/");
+    revalidatePath("/questions");
+
     return NextResponse.json(updatedCategory);
   } catch (error) {
     console.error("Error updating category:", error);
@@ -86,6 +91,10 @@ export async function DELETE(
     await prisma.category.delete({
       where: { id },
     });
+
+    // 캐시 재검증: 홈페이지와 질문 목록 페이지
+    revalidatePath("/");
+    revalidatePath("/questions");
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 
@@ -45,6 +46,10 @@ export async function PUT(
         order,
       },
     });
+
+    // 캐시 재검증: 홈페이지와 질문 목록 페이지
+    revalidatePath("/");
+    revalidatePath("/questions");
 
     return NextResponse.json(updatedTargetRole);
   } catch (error) {
@@ -97,6 +102,10 @@ export async function DELETE(
     await prisma.targetRole.delete({
       where: { id },
     });
+
+    // 캐시 재검증: 홈페이지와 질문 목록 페이지
+    revalidatePath("/");
+    revalidatePath("/questions");
 
     return NextResponse.json({ success: true });
   } catch (error) {

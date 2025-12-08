@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 
@@ -31,6 +32,10 @@ export async function POST(request: NextRequest) {
         order: order || 0,
       },
     });
+
+    // 캐시 재검증: 홈페이지와 질문 목록 페이지
+    revalidatePath("/");
+    revalidatePath("/questions");
 
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {
