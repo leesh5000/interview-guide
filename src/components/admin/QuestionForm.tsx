@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Category, RelatedCourse, TargetRole } from "@/types";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 import MarkdownEditor from "./MarkdownEditor";
 import CategoryCombobox from "./CategoryCombobox";
 
@@ -37,15 +38,21 @@ export default function QuestionForm({
   const router = useRouter();
   const isEditing = !!initialData;
 
-  const [formData, setFormData] = useState({
-    categoryId: initialData?.categoryId || "",
-    questionTitle: initialData?.questionTitle || "",
-    questionBody: initialData?.questionBody || "",
-    answerContent: initialData?.answerContent || "",
-    targetRoles: initialData?.targetRoles || [],
-    tags: initialData?.tags || [],
-    aiSummary: initialData?.aiSummary || "",
-    relatedCourses: initialData?.relatedCourses || [],
+  // 폼 데이터 유지: 새 게시물은 "question_new", 수정은 "question_edit_{id}"
+  const storageKey = isEditing ? `question_edit_${initialData.id}` : "question_new";
+
+  const { formData, setFormData, clearPersistedData } = useFormPersistence({
+    key: storageKey,
+    initialData: {
+      categoryId: initialData?.categoryId || "",
+      questionTitle: initialData?.questionTitle || "",
+      questionBody: initialData?.questionBody || "",
+      answerContent: initialData?.answerContent || "",
+      targetRoles: initialData?.targetRoles || [],
+      tags: initialData?.tags || [],
+      aiSummary: initialData?.aiSummary || "",
+      relatedCourses: initialData?.relatedCourses || [],
+    },
   });
 
   const [newTag, setNewTag] = useState("");
@@ -86,6 +93,7 @@ export default function QuestionForm({
       });
 
       if (response.ok) {
+        clearPersistedData(); // 저장 성공 시 스토리지 데이터 삭제
         router.push("/admin/questions");
         router.refresh();
       } else {

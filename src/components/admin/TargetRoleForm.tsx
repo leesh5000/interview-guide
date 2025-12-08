@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { TargetRole } from "@/types";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 interface TargetRoleFormProps {
   targetRole?: TargetRole;
@@ -26,10 +27,17 @@ export default function TargetRoleForm({ targetRole, trigger }: TargetRoleFormPr
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: targetRole?.name || "",
-    description: targetRole?.description || "",
-    order: targetRole?.order ?? 0,
+
+  // 폼 데이터 유지: 새 대상 역할은 "target_role_new", 수정은 "target_role_edit_{id}"
+  const storageKey = isEditing ? `target_role_edit_${targetRole.id}` : "target_role_new";
+
+  const { formData, setFormData, clearPersistedData } = useFormPersistence({
+    key: storageKey,
+    initialData: {
+      name: targetRole?.name || "",
+      description: targetRole?.description || "",
+      order: targetRole?.order ?? 0,
+    },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,6 +63,7 @@ export default function TargetRoleForm({ targetRole, trigger }: TargetRoleFormPr
       });
 
       if (response.ok) {
+        clearPersistedData(); // 저장 성공 시 스토리지 데이터 삭제
         setOpen(false);
         router.refresh();
         if (!isEditing) {

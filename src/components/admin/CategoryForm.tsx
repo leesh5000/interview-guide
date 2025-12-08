@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Category } from "@/types";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 interface CategoryFormProps {
   category?: Category;
@@ -26,11 +27,18 @@ export default function CategoryForm({ category, trigger }: CategoryFormProps) {
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: category?.name || "",
-    slug: category?.slug || "",
-    description: category?.description || "",
-    order: category?.order ?? 0,
+
+  // 폼 데이터 유지: 새 카테고리는 "category_new", 수정은 "category_edit_{id}"
+  const storageKey = isEditing ? `category_edit_${category.id}` : "category_new";
+
+  const { formData, setFormData, clearPersistedData } = useFormPersistence({
+    key: storageKey,
+    initialData: {
+      name: category?.name || "",
+      slug: category?.slug || "",
+      description: category?.description || "",
+      order: category?.order ?? 0,
+    },
   });
 
   const generateSlug = (name: string) => {
@@ -80,6 +88,7 @@ export default function CategoryForm({ category, trigger }: CategoryFormProps) {
       });
 
       if (response.ok) {
+        clearPersistedData(); // 저장 성공 시 스토리지 데이터 삭제
         setOpen(false);
         router.refresh();
         if (!isEditing) {
