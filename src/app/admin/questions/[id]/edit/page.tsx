@@ -40,6 +40,7 @@ export default async function EditQuestionPage({
     questionTitle: question.questionTitle,
     questionBody: question.questionBody,
     answerContent: question.answerContent,
+    followUpQuestions: question.followUpQuestions,
     targetRoles: question.targetRoles,
     tags: question.tags,
     aiSummary: question.aiSummary,

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- 말풍선 (대화/면접 질문 상징) -->
+  <rect x="2" y="4" width="28" height="20" rx="4" fill="#171717"/>
+  <!-- 말풍선 꼬리 -->
+  <path d="M8 24L8 28L14 24" fill="#171717"/>
+  <!-- 체크마크 (정답/합격 상징) -->
+  <path d="M9 13L14 18L23 9" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

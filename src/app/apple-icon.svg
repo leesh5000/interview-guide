@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <!-- 배경 -->
+  <rect width="180" height="180" rx="40" fill="#171717"/>
+  <!-- 말풍선 -->
+  <rect x="25" y="35" width="130" height="85" rx="16" fill="white"/>
+  <!-- 말풍선 꼬리 -->
+  <path d="M45 120L45 145L75 120" fill="white"/>
+  <!-- 체크마크 -->
+  <path d="M55 75L80 100L125 55" stroke="#171717" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

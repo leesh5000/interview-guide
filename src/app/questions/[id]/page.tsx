@@ -164,6 +164,20 @@ export default async function QuestionDetailPage({
           <CollapsibleAnswer content={question.answerContent} />
         )}
 
+        {/* Follow-up Questions */}
+        {question.followUpQuestions && (
+          <Card className="mb-6 border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/50">
+            <CardContent className="pt-6">
+              <h3 className="font-semibold text-purple-700 dark:text-purple-300 mb-3">
+                꼬리 질문
+              </h3>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <MarkdownPreview content={question.followUpQuestions} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* AI Summary */}
         {question.aiSummary && (
           <Card className="mb-6 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/50">

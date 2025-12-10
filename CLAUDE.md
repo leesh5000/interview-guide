@@ -51,8 +51,9 @@ npm run test:coverage     # Run tests with coverage report
 - `src/app/api/` - REST API endpoints (questions, categories, target-roles, auth, ai)
 - `src/app/admin/` - Admin dashboard (protected routes)
 - `src/components/ui/` - shadcn/ui base components
-- `src/components/admin/` - Admin-specific components (QuestionForm, MarkdownEditor)
-- `src/lib/` - Utilities (prisma client, auth helpers, openai client)
+- `src/components/admin/` - Admin-specific components (QuestionForm, MarkdownEditor, BulkQuestionForm)
+- `src/lib/` - Utilities (prisma client, auth helpers, openai client, bulk-parser)
+- `src/hooks/` - Custom React hooks (useFormPersistence for form state persistence)
 - `src/types/` - TypeScript type definitions
 - `src/__tests__/` - Test files (API, components, lib utilities)
 - `prisma/` - Database schema and migrations
@@ -63,6 +64,7 @@ npm run test:coverage     # Run tests with coverage report
 - **InterviewQuestion**: Questions with markdown body/answer, target roles, tags, AI summary, and related courses
 - **SuggestionRequest**: Community edit suggestions for questions (pending/approved/rejected status, IP-based rate limiting)
 - **CourseClick**: Tracks affiliate link clicks per question (upsert pattern for incrementing counts)
+- **Course**: Reusable course registry with affiliate URLs and thumbnails (auto-fetched via OG metadata)
 
 ### Authentication
 Simple cookie-based admin auth using `ADMIN_PASSWORD` environment variable. Auth logic in `src/lib/auth.ts`.
@@ -125,6 +127,15 @@ return <RadixComponent />;
 
 ### Affiliate Link Click Tracking
 Course links use `CourseCard` component with click tracking via `/api/course-clicks` (POST to increment, GET to fetch counts).
+
+### Bulk Question Registration
+Admin can paste formatted text at `/admin/questions/bulk` to register multiple questions at once:
+- Parser in `src/lib/bulk-parser.ts` extracts category, tags, title, body, and answer from structured text
+- Each question's category is manually mapped via dropdown in the preview UI
+- Target roles can be set globally or per-question
+
+### Form State Persistence
+`useFormPersistence` hook in `src/hooks/` saves form data to sessionStorage/localStorage to prevent data loss on accidental navigation or refresh. Used in QuestionForm and SuggestionForm.
 
 ## Notes
 

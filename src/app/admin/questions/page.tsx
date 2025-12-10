@@ -30,9 +30,14 @@ export default async function AdminQuestionsPage() {
     <main className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-semibold text-foreground">게시물 관리</h1>
-        <Link href="/admin/questions/new">
-          <Button>새 게시물 작성</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/questions/bulk">
+            <Button variant="outline">일괄 등록</Button>
+          </Link>
+          <Link href="/admin/questions/new">
+            <Button>새 게시물 작성</Button>
+          </Link>
+        </div>
       </div>
 
       {questions.length === 0 ? (

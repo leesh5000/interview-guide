@@ -26,6 +26,7 @@ export default function AdminMobileNav({ pendingCount }: AdminMobileNavProps) {
     { href: "/admin/categories", label: "카테고리 관리" },
     { href: "/admin/target-roles", label: "대상 독자 관리" },
     { href: "/admin/questions", label: "게시물 관리" },
+    { href: "/admin/courses", label: "강의 관리" },
     { href: "/admin/suggestions", label: "수정 제안", badge: pendingCount },
     { href: "/admin/questions/new", label: "새 게시물" },
   ];

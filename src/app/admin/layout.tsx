@@ -56,6 +56,12 @@ export default async function AdminLayout({
                   게시물 관리
                 </Link>
                 <Link
+                  href="/admin/courses"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  강의 관리
+                </Link>
+                <Link
                   href="/admin/suggestions"
                   className="relative text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >

@@ -12,6 +12,8 @@ import { Category, RelatedCourse, TargetRole } from "@/types";
 import { useFormPersistence } from "@/hooks/useFormPersistence";
 import MarkdownEditor from "./MarkdownEditor";
 import CategoryCombobox from "./CategoryCombobox";
+import CourseSelector from "./CourseSelector";
+import TargetRoleSelector from "./TargetRoleSelector";
 
 interface QuestionFormProps {
   categories: Category[];
@@ -22,6 +24,7 @@ interface QuestionFormProps {
     questionTitle: string;
     questionBody: string;
     answerContent: string;
+    followUpQuestions: string;
     targetRoles: string[];
     tags: string[];
     aiSummary: string | null;
@@ -31,12 +34,16 @@ interface QuestionFormProps {
 }
 
 export default function QuestionForm({
-  categories,
-  targetRoles,
+  categories: initialCategories,
+  targetRoles: initialTargetRoles,
   initialData,
 }: QuestionFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
+
+  // 카테고리 및 대상 목록을 로컬 state로 관리 (실시간 추가 지원)
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [targetRoles, setTargetRoles] = useState<TargetRole[]>(initialTargetRoles);
 
   // 폼 데이터 유지: 새 게시물은 "question_new", 수정은 "question_edit_{id}"
   const storageKey = isEditing ? `question_edit_${initialData.id}` : "question_new";
@@ -48,6 +55,7 @@ export default function QuestionForm({
       questionTitle: initialData?.questionTitle || "",
       questionBody: initialData?.questionBody || "",
       answerContent: initialData?.answerContent || "",
+      followUpQuestions: initialData?.followUpQuestions || "",
       targetRoles: initialData?.targetRoles || [],
       tags: initialData?.tags || [],
       aiSummary: initialData?.aiSummary || "",
@@ -56,9 +64,16 @@ export default function QuestionForm({
   });
 
   const [newTag, setNewTag] = useState("");
-  const [newCourse, setNewCourse] = useState({ title: "", affiliateUrl: "", thumbnailUrl: "" });
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // 강의 추가 (CourseSelector에서 호출)
+  const handleAddCourse = (course: RelatedCourse) => {
+    setFormData((prev) => ({
+      ...prev,
+      relatedCourses: [...prev.relatedCourses, course],
+    }));
+  };
 
   const handleSubmit = async (isPublished: boolean) => {
     if (!formData.categoryId || !formData.questionTitle) {
@@ -74,6 +89,7 @@ export default function QuestionForm({
         questionTitle: formData.questionTitle,
         questionBody: formData.questionBody,
         answerContent: formData.answerContent,
+        followUpQuestions: formData.followUpQuestions,
         targetRoles: formData.targetRoles,
         tags: formData.tags,
         aiSummary: formData.aiSummary || null,
@@ -166,22 +182,6 @@ export default function QuestionForm({
     }));
   };
 
-  // 강의 추가
-  const addCourse = () => {
-    if (newCourse.title && newCourse.affiliateUrl) {
-      const courseToAdd = {
-        title: newCourse.title,
-        affiliateUrl: newCourse.affiliateUrl,
-        ...(newCourse.thumbnailUrl && { thumbnailUrl: newCourse.thumbnailUrl }),
-      };
-      setFormData((prev) => ({
-        ...prev,
-        relatedCourses: [...prev.relatedCourses, courseToAdd],
-      }));
-      setNewCourse({ title: "", affiliateUrl: "", thumbnailUrl: "" });
-    }
-  };
-
   const removeCourse = (index: number) => {
     setFormData((prev) => ({
       ...prev,
@@ -200,6 +200,7 @@ export default function QuestionForm({
           onChange={(value) =>
             setFormData((prev) => ({ ...prev, categoryId: value }))
           }
+          onCategoriesChange={setCategories}
         />
       </div>
 
@@ -241,21 +242,28 @@ export default function QuestionForm({
         />
       </div>
 
+      {/* 꼬리 질문 (마크다운) */}
+      <div className="space-y-2">
+        <Label>꼬리 질문</Label>
+        <MarkdownEditor
+          value={formData.followUpQuestions}
+          onChange={(value) =>
+            setFormData((prev) => ({ ...prev, followUpQuestions: value }))
+          }
+          height={150}
+          placeholder="꼬리 질문을 마크다운으로 작성하세요... (예: - 그렇다면 기존에 잘못 설계된 API를 리팩터링하셨던 경험이 있다면...)"
+        />
+      </div>
+
       {/* 대상 */}
       <div className="space-y-2">
         <Label>대상</Label>
-        <div className="flex flex-wrap gap-2">
-          {targetRoles.map((role) => (
-            <Badge
-              key={role.id}
-              variant={formData.targetRoles.includes(role.name) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => toggleTargetRole(role.name)}
-            >
-              {role.name}
-            </Badge>
-          ))}
-        </div>
+        <TargetRoleSelector
+          targetRoles={targetRoles}
+          selectedRoles={formData.targetRoles}
+          onToggle={toggleTargetRole}
+          onTargetRolesChange={setTargetRoles}
+        />
       </div>
 
       {/* 태그 */}
@@ -357,42 +365,9 @@ export default function QuestionForm({
               ))}
             </ul>
           )}
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Input
-                placeholder="강의명"
-                value={newCourse.title}
-                onChange={(e) =>
-                  setNewCourse((prev) => ({ ...prev, title: e.target.value }))
-                }
-              />
-              <Input
-                placeholder="인프런 제휴 링크"
-                value={newCourse.affiliateUrl}
-                onChange={(e) =>
-                  setNewCourse((prev) => ({
-                    ...prev,
-                    affiliateUrl: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="썸네일 URL (선택사항, 비워두면 자동 추출)"
-                value={newCourse.thumbnailUrl}
-                onChange={(e) =>
-                  setNewCourse((prev) => ({
-                    ...prev,
-                    thumbnailUrl: e.target.value,
-                  }))
-                }
-              />
-              <Button type="button" variant="outline" onClick={addCourse}>
-                추가
-              </Button>
-            </div>
-          </div>
+
+          {/* 강의 검색/선택/추가 */}
+          <CourseSelector onSelect={handleAddCourse} />
         </CardContent>
       </Card>
 

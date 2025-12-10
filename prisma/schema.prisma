@@ -35,9 +35,10 @@ model InterviewQuestion {
   category       Category @relation(fields: [categoryId], references: [id])
 
   // 질문 정보
-  questionTitle  String              // 질문 제목
-  questionBody   String   @db.Text   // 질문 본문 (의도, 평가포인트 등 - 마크다운)
-  answerContent  String   @db.Text   // 답변 내용 (마크다운)
+  questionTitle     String              // 질문 제목
+  questionBody      String   @db.Text   // 질문 본문 (의도, 평가포인트 등 - 마크다운)
+  answerContent     String   @db.Text   // 답변 내용 (마크다운)
+  followUpQuestions String   @db.Text @default("")  // 꼬리 질문 (마크다운)
 
   // 메타 정보
   targetRoles    String[]            // 대상: ["공통", "백엔드 개발자", "DB 엔지니어"]
@@ -107,4 +108,17 @@ model CourseClick {
 
   @@unique([questionId, affiliateUrl])
   @@index([questionId])
+}
+
+// 강의 관리
+model Course {
+  id           String   @id @default(uuid())
+  title        String
+  affiliateUrl String   @unique  // 제휴 링크 (고유)
+  thumbnailUrl String?            // 썸네일 이미지 URL
+  description  String?            // 강의 설명 (선택)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([title])
 }
