@@ -122,3 +122,15 @@ model Course {
 
   @@index([title])
 }
+
+// 일별 강의 클릭 로그 (오늘의 인기 강의용)
+model DailyClickLog {
+  id           String   @id @default(uuid())
+  affiliateUrl String
+  date         DateTime @db.Date  // 날짜만 저장 (시간 제외)
+  clickCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@unique([affiliateUrl, date])
+  @@index([date])
+}

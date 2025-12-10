@@ -7,6 +7,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 
+// 빌드 시 정적 생성 시도하지 않음 (Prisma/PgBouncer 연결 제한 문제 방지)
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // 카테고리 및 게시물 수 조회
   const categories = await prisma.category.findMany({
@@ -42,9 +45,15 @@ export default async function Home() {
     })
   );
 
-  // 인기 강의 조회 (클릭 수 기준)
-  const clickStats = await prisma.courseClick.groupBy({
+  // 오늘의 인기 강의 조회 (오늘 클릭 수 기준)
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+  const kstDate = new Date(now.getTime() + kstOffset);
+  const today = new Date(kstDate.toISOString().split("T")[0]);
+
+  const clickStats = await prisma.dailyClickLog.groupBy({
     by: ["affiliateUrl"],
+    where: { date: today },
     _sum: { clickCount: true },
     orderBy: { _sum: { clickCount: "desc" } },
     take: 5,
@@ -108,7 +117,7 @@ export default async function Home() {
           <div className="container mx-auto px-4">
             <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              인기 강의
+              오늘의 인기 강의
             </h2>
           </div>
           <div className="overflow-x-auto scrollbar-hide">

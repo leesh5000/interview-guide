@@ -48,7 +48,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // upsert: 존재하면 증가, 없으면 생성
+    // 오늘 날짜 (KST 기준, 시간 제거)
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+    const kstDate = new Date(now.getTime() + kstOffset);
+    const today = new Date(kstDate.toISOString().split("T")[0]);
+
+    // 1. 기존 CourseClick 업데이트 (누적 - 호환성 유지)
     const result = await prisma.courseClick.upsert({
       where: {
         questionId_affiliateUrl: {
@@ -65,6 +71,30 @@ export async function POST(request: NextRequest) {
         clickCount: 1,
       },
     });
+
+    // 2. DailyClickLog upsert (오늘 날짜 기준)
+    await prisma.dailyClickLog.upsert({
+      where: {
+        affiliateUrl_date: { affiliateUrl, date: today },
+      },
+      update: {
+        clickCount: { increment: 1 },
+      },
+      create: {
+        affiliateUrl,
+        date: today,
+        clickCount: 1,
+      },
+    });
+
+    // 3. 7일 이상 된 로그 삭제 (확률적: 1% 확률로 실행)
+    if (Math.random() < 0.01) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 7);
+      await prisma.dailyClickLog.deleteMany({
+        where: { date: { lt: cutoff } },
+      });
+    }
 
     return NextResponse.json({ clickCount: result.clickCount });
   } catch {
