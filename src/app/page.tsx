@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Flame } from "lucide-react";
+import { ArrowRight, Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CourseCarousel } from "@/components/CourseCarousel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
@@ -45,15 +46,9 @@ export default async function Home() {
     })
   );
 
-  // 오늘의 인기 강의 조회 (오늘 클릭 수 기준)
-  const now = new Date();
-  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
-  const kstDate = new Date(now.getTime() + kstOffset);
-  const today = new Date(kstDate.toISOString().split("T")[0]);
-
-  const clickStats = await prisma.dailyClickLog.groupBy({
+  // 인기 강의 조회 (전체 기간 클릭 수 기준)
+  const clickStats = await prisma.courseClick.groupBy({
     by: ["affiliateUrl"],
-    where: { date: today },
     _sum: { clickCount: true },
     orderBy: { _sum: { clickCount: "desc" } },
     take: 5,
@@ -73,6 +68,12 @@ export default async function Home() {
           .filter((c): c is NonNullable<typeof c> => c !== null);
       })
     : [];
+
+  // 신규 강의 조회 (최근 등록순)
+  const newCourses = await prisma.course.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
 
   return (
     <div className="min-h-screen bg-background transition-colors">
@@ -117,44 +118,22 @@ export default async function Home() {
           <div className="container mx-auto px-4">
             <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              오늘의 인기 강의
+              지금 뜨는 인기 강의
             </h2>
+            <CourseCarousel courses={popularCourses} intervalMs={4000} />
           </div>
-          <div className="overflow-x-auto scrollbar-hide">
-            <div className="flex gap-4 px-4 pb-4 min-w-max mx-auto w-fit">
-              {popularCourses.map((course) => (
-                <a
-                  key={course.id}
-                  href={course.affiliateUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block flex-shrink-0"
-                >
-                  <Card className="w-64 hover:border-foreground/20 transition-colors cursor-pointer overflow-hidden">
-                    {course.thumbnailUrl ? (
-                      <div className="relative w-full h-36 bg-muted">
-                        <Image
-                          src={course.thumbnailUrl}
-                          alt={course.title}
-                          fill
-                          className="object-cover"
-                          sizes="256px"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-36 bg-muted flex items-center justify-center">
-                        <span className="text-muted-foreground text-sm">No Image</span>
-                      </div>
-                    )}
-                    <CardContent className="p-4">
-                      <p className="font-medium text-foreground line-clamp-2 text-sm">
-                        {course.title}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </a>
-              ))}
-            </div>
+        </section>
+      )}
+
+      {/* New Courses Section */}
+      {newCourses.length > 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-500" />
+              신규 강의
+            </h2>
+            <CourseCarousel courses={newCourses} intervalMs={5000} />
           </div>
         </section>
       )}
@@ -165,9 +144,8 @@ export default async function Home() {
           <h2 className="text-2xl font-semibold text-foreground mb-8 text-center">
             카테고리별 면접 질문
           </h2>
-        </div>
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-4 px-4 pb-4 min-w-max mx-auto w-fit">
+          <div className="overflow-x-auto scrollbar-hide -mx-4">
+            <div className="flex gap-4 px-4 pb-4 min-w-max justify-center">
             {categoriesWithCount.map((category) => (
               <Link key={category.slug} href={`/questions?category=${category.slug}`}>
                 <Card className="w-72 h-full hover:border-foreground/20 transition-colors cursor-pointer flex-shrink-0">
@@ -189,6 +167,7 @@ export default async function Home() {
                 </Card>
               </Link>
             ))}
+            </div>
           </div>
         </div>
       </section>
@@ -199,9 +178,8 @@ export default async function Home() {
           <h2 className="text-2xl font-semibold text-foreground mb-8 text-center">
             대상 독자별 면접 질문
           </h2>
-        </div>
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-4 px-4 pb-4 min-w-max mx-auto w-fit">
+          <div className="overflow-x-auto scrollbar-hide -mx-4">
+            <div className="flex gap-4 px-4 pb-4 min-w-max justify-center">
             {targetRolesWithCount.map((role) => (
               <Link key={role.name} href={`/questions?role=${encodeURIComponent(role.name)}`}>
                 <Card className="w-64 h-full hover:border-foreground/20 transition-colors cursor-pointer flex-shrink-0">
@@ -223,6 +201,7 @@ export default async function Home() {
                 </Card>
               </Link>
             ))}
+            </div>
           </div>
         </div>
       </section>
