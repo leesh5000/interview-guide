@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { CourseCarousel } from "@/components/CourseCarousel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import { SEO_CONFIG } from "@/lib/seo";
 
 // 빌드 시 정적 생성 시도하지 않음 (Prisma/PgBouncer 연결 제한 문제 방지)
 export const dynamic = "force-dynamic";
@@ -75,8 +75,22 @@ export default async function Home() {
     take: 20,
   });
 
+  // Organization JSON-LD for homepage
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SEO_CONFIG.SITE_NAME,
+    url: SEO_CONFIG.SITE_URL,
+    logo: `${SEO_CONFIG.SITE_URL}${SEO_CONFIG.DEFAULT_OG_IMAGE}`,
+    description: SEO_CONFIG.DEFAULT_DESCRIPTION,
+  };
+
   return (
     <div className="min-h-screen bg-background transition-colors">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">

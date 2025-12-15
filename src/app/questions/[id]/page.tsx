@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageSquarePlus } from "lucide-react";
@@ -12,6 +13,65 @@ import ReviewCountBadge from "@/components/ReviewCountBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import CourseCard from "@/components/CourseCard";
 import Footer from "@/components/Footer";
+import { SEO_CONFIG, stripMarkdown, truncateText } from "@/lib/seo";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  const question = await prisma.interviewQuestion.findUnique({
+    where: { id, isPublished: true },
+    include: { category: true },
+  });
+
+  if (!question) {
+    return {
+      title: "질문을 찾을 수 없습니다",
+    };
+  }
+
+  // Use AI summary as description, fallback to truncated answer
+  const description = question.aiSummary
+    || truncateText(stripMarkdown(question.answerContent || ""), 160)
+    || `${question.category.name} 면접 질문: ${question.questionTitle}`;
+
+  // Build keywords from tags and target roles
+  const keywords = [
+    ...question.tags,
+    ...question.targetRoles,
+    question.category.name,
+    "면접 질문",
+    "개발자 면접",
+  ];
+
+  return {
+    title: question.questionTitle,
+    description,
+    keywords,
+    alternates: {
+      canonical: `${SEO_CONFIG.SITE_URL}/questions/${id}`,
+    },
+    openGraph: {
+      type: "article",
+      title: question.questionTitle,
+      description,
+      url: `${SEO_CONFIG.SITE_URL}/questions/${id}`,
+      publishedTime: question.createdAt.toISOString(),
+      modifiedTime: question.updatedAt.toISOString(),
+      authors: [SEO_CONFIG.SITE_NAME],
+      section: question.category.name,
+      tags: question.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: question.questionTitle,
+      description,
+    },
+  };
+}
 
 export default async function QuestionDetailPage({
   params,
@@ -61,8 +121,29 @@ export default async function QuestionDetailPage({
       .replace(/^(\s*[-*]?\s*)(평가\s*포인트\s*:)/gm, '$1✅ $2');
   }
 
+  // FAQPage JSON-LD for rich search results
+  const plainAnswer = truncateText(stripMarkdown(question.answerContent || ""), 500);
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: question.questionTitle,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: plainAnswer,
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-gray-100 transition-colors">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       {/* Header */}
       <header className="border-b border-gray-200 dark:border-[#1a1a1a] bg-white dark:bg-[#111111]">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">

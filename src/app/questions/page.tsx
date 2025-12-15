@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,57 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import ReviewCountBadge from "@/components/ReviewCountBadge";
 import Footer from "@/components/Footer";
 import ExpandableFilterList from "@/components/ExpandableFilterList";
+import { SEO_CONFIG } from "@/lib/seo";
+
+type Props = {
+  searchParams: Promise<{ category?: string; role?: string }>;
+};
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const categorySlug = params.category;
+  const roleFilter = params.role;
+
+  let title = "면접 질문 목록";
+  let description = "개발자 면접에서 자주 나오는 질문들을 카테고리별로 확인하세요.";
+  let canonicalPath = "/questions";
+
+  if (categorySlug) {
+    const category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+    });
+    if (category) {
+      title = `${category.name} 면접 질문`;
+      description = category.description || `${category.name} 관련 개발자 면접 질문과 모범 답안을 확인하세요.`;
+      canonicalPath = `/questions?category=${categorySlug}`;
+    }
+  }
+
+  if (roleFilter) {
+    title = `${roleFilter} ${title}`;
+    description = `${roleFilter}를 위한 ${description}`;
+    canonicalPath = categorySlug
+      ? `/questions?category=${categorySlug}&role=${encodeURIComponent(roleFilter)}`
+      : `/questions?role=${encodeURIComponent(roleFilter)}`;
+  }
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${SEO_CONFIG.SITE_URL}${canonicalPath}`,
+    },
+    openGraph: {
+      title: `${title} | ${SEO_CONFIG.SITE_NAME}`,
+      description,
+      url: `${SEO_CONFIG.SITE_URL}${canonicalPath}`,
+    },
+    twitter: {
+      title: `${title} | ${SEO_CONFIG.SITE_NAME}`,
+      description,
+    },
+  };
+}
 
 export default async function QuestionsPage({
   searchParams,
