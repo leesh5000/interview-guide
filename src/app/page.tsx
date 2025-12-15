@@ -133,7 +133,7 @@ export default async function Home() {
               <Sparkles className="h-5 w-5 text-blue-500" />
               신규 강의
             </h2>
-            <CourseCarousel courses={newCourses} intervalMs={5000} />
+            <CourseCarousel courses={newCourses} intervalMs={5000} initialDelayMs={2500} />
           </div>
         </section>
       )}

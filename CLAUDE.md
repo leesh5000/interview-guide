@@ -142,20 +142,28 @@ Admin can export all questions as JSON and import them back for backup/migration
 - **Note**: When importing `relatedCourses` (Prisma Json field), use double cast: `as unknown as Prisma.InputJsonValue`
 
 ### Horizontal Scroll Sections
-Homepage uses horizontal scroll for categories, target roles, and popular courses:
-- Container: `overflow-x-auto scrollbar-hide`
-- Inner wrapper: `flex gap-4 px-4 min-w-max mx-auto w-fit`
+Homepage uses horizontal scroll for categories, target roles, and courses:
+- Container: `overflow-x-auto scrollbar-hide -mx-4`
+- Inner wrapper: `flex gap-4 px-4 pb-4 min-w-max justify-center`
 - Cards: `flex-shrink-0` with fixed width
 - `.scrollbar-hide` utility defined in `globals.css` (hides scrollbar across all browsers)
 
+### Course Carousel
+`CourseCarousel` client component provides auto-rotating course display with manual navigation:
+- Props: `courses`, `intervalMs` (rotation interval), `initialDelayMs` (staggered start)
+- Features: auto-rotation by page width, pause on hover/touch, left/right navigation arrows
+- Usage on homepage:
+  - Popular courses: `intervalMs={4000}` (immediate start)
+  - New courses: `intervalMs={5000} initialDelayMs={2500}` (staggered start)
+
 ### Popular Courses Aggregation
-Homepage displays top 5 courses by click count using CourseClick aggregation:
+Homepage displays top 20 courses by all-time click count using CourseClick aggregation:
 ```typescript
 const clickStats = await prisma.courseClick.groupBy({
   by: ['affiliateUrl'],
   _sum: { clickCount: true },
   orderBy: { _sum: { clickCount: 'desc' } },
-  take: 5,
+  take: 20,
 });
 ```
 

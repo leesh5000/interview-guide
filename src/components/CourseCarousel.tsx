@@ -16,9 +16,10 @@ interface Course {
 interface CourseCarouselProps {
   courses: Course[];
   intervalMs?: number;
+  initialDelayMs?: number;
 }
 
-export function CourseCarousel({ courses, intervalMs = 3000 }: CourseCarouselProps) {
+export function CourseCarousel({ courses, intervalMs = 3000, initialDelayMs = 0 }: CourseCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -67,22 +68,31 @@ export function CourseCarousel({ courses, intervalMs = 3000 }: CourseCarouselPro
     if (!scrollRef.current || courses.length <= 1 || isPaused) return;
 
     const container = scrollRef.current;
+    let interval: NodeJS.Timeout;
 
-    const interval = setInterval(() => {
-      // 화면에 보이는 너비만큼 스크롤
-      const scrollAmount = container.clientWidth;
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      const nextScroll = container.scrollLeft + scrollAmount;
+    const startRotation = () => {
+      interval = setInterval(() => {
+        // 화면에 보이는 너비만큼 스크롤
+        const scrollAmount = container.clientWidth;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        const nextScroll = container.scrollLeft + scrollAmount;
 
-      if (nextScroll >= maxScroll) {
-        container.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        container.scrollTo({ left: nextScroll, behavior: "smooth" });
-      }
-    }, intervalMs);
+        if (nextScroll >= maxScroll) {
+          container.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+          container.scrollTo({ left: nextScroll, behavior: "smooth" });
+        }
+      }, intervalMs);
+    };
 
-    return () => clearInterval(interval);
-  }, [courses.length, intervalMs, isPaused]);
+    // 초기 딜레이 후 로테이션 시작
+    const delayTimeout = setTimeout(startRotation, initialDelayMs);
+
+    return () => {
+      clearTimeout(delayTimeout);
+      clearInterval(interval);
+    };
+  }, [courses.length, intervalMs, initialDelayMs, isPaused]);
 
   return (
     <div
