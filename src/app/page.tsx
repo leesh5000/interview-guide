@@ -89,6 +89,23 @@ export default async function Home() {
     take: 5,
   });
 
+  // 개발 소식의 관련 강의 썸네일 조회
+  const allCourseIds = dailyNews.flatMap((n) => {
+    const courses = n.relatedCourses as Array<{ courseId: string }>;
+    return courses.map((c) => c.courseId);
+  });
+  const uniqueCourseIds = [...new Set(allCourseIds)];
+  const courseThumbnails = uniqueCourseIds.length > 0
+    ? await prisma.course.findMany({
+        where: { id: { in: uniqueCourseIds } },
+        select: { id: true, thumbnailUrl: true },
+      })
+    : [];
+  const thumbnailMap: Record<string, string | null> = {};
+  courseThumbnails.forEach((c) => {
+    thumbnailMap[c.id] = c.thumbnailUrl;
+  });
+
   // Organization JSON-LD for homepage
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -114,6 +131,9 @@ export default async function Home() {
           <nav className="flex gap-4 items-center">
             <Link href="/questions" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
               질문 목록
+            </Link>
+            <Link href="/news" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              개발 소식
             </Link>
             <ThemeToggle />
           </nav>
@@ -142,12 +162,17 @@ export default async function Home() {
         news={dailyNews.map((n) => ({
           ...n,
           publishedAt: n.publishedAt.toISOString(),
-          relatedCourses: n.relatedCourses as Array<{
-            courseId: string;
-            title: string;
-            affiliateUrl: string;
-            matchScore: number;
-          }>,
+          relatedCourses: (
+            n.relatedCourses as Array<{
+              courseId: string;
+              title: string;
+              affiliateUrl: string;
+              matchScore: number;
+            }>
+          ).map((course) => ({
+            ...course,
+            thumbnailUrl: thumbnailMap[course.courseId] || null,
+          })),
         }))}
       />
 
