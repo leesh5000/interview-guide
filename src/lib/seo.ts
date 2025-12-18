@@ -1,6 +1,6 @@
 // SEO Configuration Constants
 export const SEO_CONFIG = {
-  SITE_URL: "https://devinterview.site",
+  SITE_URL: "https://www.devinterview.site",
   SITE_NAME: "DevInterview",
   DEFAULT_TITLE: "DevInterview - 개발자 면접 준비 가이드",
   DEFAULT_DESCRIPTION:

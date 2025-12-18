@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__playwright_navigate",
+      "Bash(npx playwright install chromium)",
+      "Bash(npx playwright install)",
+      "WebFetch(domain:www.devinterview.site)",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:devinterview.site)",
+      "Bash(curl:*)",
+      "Bash(git restore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)"
+    ]
+  }
+}

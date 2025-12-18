@@ -6,10 +6,10 @@
       "has": [
         {
           "type": "host",
-          "value": "www.devinterview.site"
+          "value": "devinterview.site"
         }
       ],
-      "destination": "https://devinterview.site/:path*",
+      "destination": "https://www.devinterview.site/:path*",
       "permanent": true
     }
   ],

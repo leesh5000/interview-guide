@@ -6,18 +6,33 @@ import { isAuthenticated } from "@/lib/auth";
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const category = searchParams.get("category");
+  const role = searchParams.get("role");
   const published = searchParams.get("published");
+  const take = searchParams.get("take");
+  const skip = searchParams.get("skip");
 
-  const questions = await prisma.interviewQuestion.findMany({
-    where: {
-      ...(category && { category: { slug: category } }),
-      ...(published !== null && { isPublished: published === "true" }),
-    },
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
+  const where = {
+    ...(category && { category: { slug: category } }),
+    ...(role && { targetRoles: { has: role } }),
+    ...(published !== null && { isPublished: published === "true" }),
+  };
+
+  const [questions, totalCount] = await Promise.all([
+    prisma.interviewQuestion.findMany({
+      where,
+      include: { category: true },
+      orderBy: { createdAt: "desc" },
+      ...(take && { take: parseInt(take, 10) }),
+      ...(skip && { skip: parseInt(skip, 10) }),
+    }),
+    prisma.interviewQuestion.count({ where }),
+  ]);
+
+  return NextResponse.json({
+    questions,
+    totalCount,
+    hasMore: skip && take ? parseInt(skip, 10) + questions.length < totalCount : false,
   });
-
-  return NextResponse.json(questions);
 }
 
 // POST: 새 질문 생성

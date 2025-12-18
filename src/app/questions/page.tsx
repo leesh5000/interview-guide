@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import ReviewCountBadge from "@/components/ReviewCountBadge";
 import Footer from "@/components/Footer";
 import ExpandableFilterList from "@/components/ExpandableFilterList";
+import QuestionList from "@/components/QuestionList";
 import { SEO_CONFIG } from "@/lib/seo";
+
+const DEFAULT_PAGE_SIZE = 50;
 
 type Props = {
   searchParams: Promise<{ category?: string; role?: string }>;
@@ -69,27 +69,35 @@ export default async function QuestionsPage({
   const categorySlug = params.category;
   const roleFilter = params.role;
 
-  const questions = await prisma.interviewQuestion.findMany({
-    where: {
-      isPublished: true,
-      ...(categorySlug && {
-        category: {
-          slug: categorySlug,
-        },
-      }),
-      ...(roleFilter && {
-        targetRoles: {
-          has: roleFilter,
-        },
-      }),
-    },
-    include: {
-      category: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const questionWhere = {
+    isPublished: true,
+    ...(categorySlug && {
+      category: {
+        slug: categorySlug,
+      },
+    }),
+    ...(roleFilter && {
+      targetRoles: {
+        has: roleFilter,
+      },
+    }),
+  };
+
+  const [questions, questionTotalCount] = await Promise.all([
+    prisma.interviewQuestion.findMany({
+      where: questionWhere,
+      include: {
+        category: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: DEFAULT_PAGE_SIZE,
+    }),
+    prisma.interviewQuestion.count({
+      where: questionWhere,
+    }),
+  ]);
 
   const categories = await prisma.category.findMany({
     orderBy: {
@@ -141,19 +149,6 @@ export default async function QuestionsPage({
     roleCounts.map((r) => [r.name, r.count])
   );
 
-  // 전체 게시물 수 (현재 필터 기준)
-  const totalCount = await prisma.interviewQuestion.count({
-    where: {
-      isPublished: true,
-      ...(categorySlug && {
-        category: { slug: categorySlug },
-      }),
-      ...(roleFilter && {
-        targetRoles: { has: roleFilter },
-      }),
-    },
-  });
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] transition-colors">
       {/* Header */}
@@ -187,7 +182,7 @@ export default async function QuestionsPage({
                 count: categoryCountMap[cat.slug] || 0,
               }))}
               selectedValue={categorySlug}
-              totalCount={totalCount}
+              totalCount={questionTotalCount}
               filterType="category"
               currentCategorySlug={categorySlug}
               currentRoleFilter={roleFilter}
@@ -205,7 +200,7 @@ export default async function QuestionsPage({
                 count: roleCountMap[role.name] || 0,
               }))}
               selectedValue={roleFilter}
-              totalCount={totalCount}
+              totalCount={questionTotalCount}
               filterType="role"
               currentCategorySlug={categorySlug}
               currentRoleFilter={roleFilter}
@@ -237,57 +232,12 @@ export default async function QuestionsPage({
         </div>
 
         {/* Questions List */}
-        {questions.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <p>아직 등록된 질문이 없습니다.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {questions.map((q) => (
-              <Link key={q.id} href={`/questions/${q.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-[#141414] border-gray-200 dark:border-[#1a1a1a]">
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <Badge variant="secondary" className="bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300">
-                        {q.category.name}
-                      </Badge>
-                      {q.targetRoles.map((role) => (
-                        <Badge key={role} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300">
-                          {role}
-                        </Badge>
-                      ))}
-                    </div>
-                    <CardTitle className="text-lg text-gray-900 dark:text-white">{q.questionTitle}</CardTitle>
-                    {q.tags.length > 0 && (
-                      <div className="flex gap-1 flex-wrap mt-2">
-                        {q.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center gap-4">
-                        <span>조회수 {q.viewCount}</span>
-                        <ReviewCountBadge count={q.reviewCount} />
-                      </div>
-                      <span className="inline-flex items-center gap-1">
-                        자세히 보기
-                        <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
+        <QuestionList
+          initialQuestions={questions}
+          initialTotalCount={questionTotalCount}
+          categorySlug={categorySlug}
+          roleFilter={roleFilter}
+        />
       </main>
 
       <Footer />

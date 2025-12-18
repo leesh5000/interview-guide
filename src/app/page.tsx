@@ -106,16 +106,13 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       {/* Header */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-gray-200 dark:border-[#1a1a1a] bg-white dark:bg-[#111111]">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-lg font-semibold text-foreground">
+          <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
             DevInterview
           </Link>
           <nav className="flex gap-4 items-center">
-            <Link
-              href="/questions"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link href="/questions" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
               질문 목록
             </Link>
             <ThemeToggle />

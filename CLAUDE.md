@@ -188,7 +188,7 @@ SEO is configured via Next.js Metadata API with constants in `src/lib/seo.ts`:
 - **Sitemap**: `src/app/sitemap.ts` generates dynamic sitemap (homepage, categories, all published questions)
 - **Robots**: `src/app/robots.ts` blocks `/admin/` and `/api/` from crawlers
 - **JSON-LD**: Organization schema on homepage, FAQPage schema on question details
-- **Canonical URL**: `https://devinterview.site` (non-www), www redirects via `vercel.json`
+- **Canonical URL**: `https://www.devinterview.site` (www), non-www redirects via `vercel.json`
 - **OG Image**: Default image at `public/og-default.png` (1200x630px)
 
 Search Console verification codes go in `layout.tsx` metadata.verification (Google, Naver).
