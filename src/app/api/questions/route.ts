@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     ...(published !== null && { isPublished: published === "true" }),
   };
 
-  const [questions, totalCount] = await Promise.all([
+  const [questionsRaw, totalCount] = await Promise.all([
     prisma.interviewQuestion.findMany({
       where,
       include: { category: true },
@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
     }),
     prisma.interviewQuestion.count({ where }),
   ]);
+
+  // relatedCourses 개수 추가
+  const questions = questionsRaw.map((q) => ({
+    ...q,
+    relatedCoursesCount: (q.relatedCourses as unknown[])?.length || 0,
+  }));
 
   return NextResponse.json({
     questions,

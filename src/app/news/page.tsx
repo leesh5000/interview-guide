@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Newspaper } from "lucide-react";
+import { ArrowRight, BookOpen, Newspaper } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
@@ -97,6 +97,12 @@ export default async function NewsPage({
             >
               개발 소식
             </Link>
+            <Link
+              href="/courses"
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            >
+              강의
+            </Link>
             <ThemeToggle />
           </nav>
         </div>
@@ -149,10 +155,18 @@ export default async function NewsPage({
                     <CardDescription className="text-sm leading-relaxed line-clamp-2 mb-3">
                       {item.aiSummary}
                     </CardDescription>
-                    <span className="text-xs text-purple-500 inline-flex items-center gap-1">
-                      자세히 보기
-                      <ArrowRight className="h-3 w-3" />
-                    </span>
+                    <div className="flex items-center justify-between">
+                      {(item.relatedCourses as unknown[])?.length > 0 && (
+                        <span className="text-sm text-green-600 dark:text-green-400 font-medium inline-flex items-center gap-1.5">
+                          <BookOpen className="h-4 w-4" />
+                          강의 {(item.relatedCourses as unknown[]).length}
+                        </span>
+                      )}
+                      <span className="text-sm text-purple-500 inline-flex items-center gap-1 ml-auto">
+                        자세히 보기
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>

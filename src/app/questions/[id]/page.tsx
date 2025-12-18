@@ -157,6 +157,9 @@ export default async function QuestionDetailPage({
             <Link href="/news" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
               개발 소식
             </Link>
+            <Link href="/courses" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              강의
+            </Link>
             <ThemeToggle />
           </nav>
         </div>

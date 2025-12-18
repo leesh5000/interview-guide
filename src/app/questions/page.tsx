@@ -84,7 +84,7 @@ export default async function QuestionsPage({
     }),
   };
 
-  const [questions, questionTotalCount] = await Promise.all([
+  const [questionsRaw, questionTotalCount] = await Promise.all([
     prisma.interviewQuestion.findMany({
       where: questionWhere,
       include: {
@@ -99,6 +99,12 @@ export default async function QuestionsPage({
       where: questionWhere,
     }),
   ]);
+
+  // relatedCourses 개수 추가
+  const questions = questionsRaw.map((q) => ({
+    ...q,
+    relatedCoursesCount: (q.relatedCourses as unknown[])?.length || 0,
+  }));
 
   const categories = await prisma.category.findMany({
     orderBy: {
@@ -164,6 +170,9 @@ export default async function QuestionsPage({
             </Link>
             <Link href="/news" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
               개발 소식
+            </Link>
+            <Link href="/courses" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              강의
             </Link>
             <ThemeToggle />
           </nav>
