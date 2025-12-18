@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MessageCircleQuestion } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -170,7 +171,12 @@ export default async function QuestionsPage({
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">면접 질문</h1>
+        <div className="flex items-center gap-2 mb-8">
+          <MessageCircleQuestion className="h-7 w-7 text-blue-500" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            면접 질문
+          </h1>
+        </div>
 
         {/* Filters */}
         <div className="mb-8 space-y-4">
