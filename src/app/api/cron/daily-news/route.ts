@@ -3,20 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { fetchGeekNewsRss } from "@/lib/rss-parser";
 import { generateNewsSummary, matchRelatedCourses } from "@/lib/gemini";
+import { isAuthenticated } from "@/lib/auth";
 
-// Vercel Cron 인증
-function verifyCronSecret(request: NextRequest): boolean {
+// Vercel Cron 인증 또는 관리자 인증
+async function verifyAccess(request: NextRequest): Promise<boolean> {
+  // Cron 시크릿 인증
   const authHeader = request.headers.get("authorization");
-  if (!process.env.CRON_SECRET) {
-    console.warn("CRON_SECRET not set, skipping auth");
+  if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
     return true;
   }
-  return authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+  // 관리자 쿠키 인증 (수동 실행용)
+  const authenticated = await isAuthenticated();
+  return authenticated;
 }
 
 // POST: Cron 실행 (뉴스 수집)
 export async function POST(request: NextRequest) {
-  if (!verifyCronSecret(request)) {
+  const hasAccess = await verifyAccess(request);
+  if (!hasAccess) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -40,8 +45,8 @@ export async function POST(request: NextRequest) {
     });
     const existingUrlSet = new Set(existingUrls.map((n) => n.originalUrl));
 
-    // 4. 새 뉴스만 필터링 (최대 5개)
-    const maxNews = 5;
+    // 4. 새 뉴스만 필터링 (최대 10개)
+    const maxNews = 10;
     const newItems = feed.items
       .filter((item) => !existingUrlSet.has(item.link))
       .slice(0, maxNews - existingUrls.length);
@@ -148,7 +153,8 @@ export async function POST(request: NextRequest) {
 
 // GET: 상태 확인용 (테스트/디버깅)
 export async function GET(request: NextRequest) {
-  if (!verifyCronSecret(request)) {
+  const hasAccess = await verifyAccess(request);
+  if (!hasAccess) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -12,6 +12,7 @@ import {
 import { isAuthenticated } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewsDeleteButton from "@/components/admin/NewsDeleteButton";
+import ManualNewsCollectButton from "@/components/admin/ManualNewsCollectButton";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 export default async function AdminNewsPage() {
@@ -36,9 +37,7 @@ export default async function AdminNewsPage() {
     <main className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-semibold text-foreground">뉴스 관리</h1>
-        <Link href="/api/cron/daily-news" target="_blank">
-          <Button variant="outline">수동 수집 실행</Button>
-        </Link>
+        <ManualNewsCollectButton />
       </div>
 
       {/* 수집 이력 섹션 */}
