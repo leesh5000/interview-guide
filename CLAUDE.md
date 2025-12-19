@@ -43,7 +43,7 @@ npm run test:coverage     # Run tests with coverage report
 - **UI**: shadcn/ui components (Radix UI primitives) + Tailwind CSS v4
 - **Theming**: next-themes for dark/light mode support
 - **Markdown**: @uiw/react-md-editor for editing, react-markdown + @tailwindcss/typography for rendering
-- **AI**: OpenAI API (gpt-4o-mini) for generating question summaries
+- **AI**: Google Gemini API (gemini-2.0-flash-exp) for generating question summaries
 - **Testing**: Vitest + React Testing Library + jsdom
 
 ### Directory Structure
@@ -52,7 +52,7 @@ npm run test:coverage     # Run tests with coverage report
 - `src/app/admin/` - Admin dashboard (protected routes)
 - `src/components/ui/` - shadcn/ui base components
 - `src/components/admin/` - Admin-specific components (QuestionForm, MarkdownEditor, BulkQuestionForm)
-- `src/lib/` - Utilities (prisma client, auth helpers, openai client, bulk-parser)
+- `src/lib/` - Utilities (prisma client, auth helpers, gemini client, bulk-parser)
 - `src/hooks/` - Custom React hooks (useFormPersistence for form state persistence)
 - `src/types/` - TypeScript type definitions
 - `src/__tests__/` - Test files (API, components, lib utilities)
@@ -82,7 +82,7 @@ Required:
 - `DATABASE_URL` - PostgreSQL connection string (with `?pgbouncer=true&connection_limit=1` for Supabase)
 - `DIRECT_URL` - Direct PostgreSQL connection for migrations (Supabase Session mode)
 - `ADMIN_PASSWORD` - Admin login password
-- `OPENAI_API_KEY` - For AI summary generation and daily news processing
+- `GEMINI_API_KEY` - For AI summary generation and daily news processing
 - `CRON_SECRET` - For Vercel Cron job authentication (daily news collection)
 
 ## Deployment
@@ -185,13 +185,39 @@ Questions page uses `ExpandableFilterList` component for mobile-friendly filter 
 SEO is configured via Next.js Metadata API with constants in `src/lib/seo.ts`:
 - **Global metadata**: `layout.tsx` defines `metadataBase`, OG/Twitter cards, keywords, robots directives
 - **Dynamic metadata**: `generateMetadata()` in questions list and detail pages
-- **Sitemap**: `src/app/sitemap.ts` generates dynamic sitemap (homepage, categories, all published questions)
+- **Sitemap**: `src/app/sitemap.ts` generates dynamic sitemap (homepage, categories, all published questions, all courses)
 - **Robots**: `src/app/robots.ts` blocks `/admin/` and `/api/` from crawlers
 - **JSON-LD**: Organization schema on homepage, FAQPage schema on question details
 - **Canonical URL**: `https://www.devinterview.site` (www), non-www redirects via `vercel.json`
 - **OG Image**: Default image at `public/og-default.png` (1200x630px)
 
 Search Console verification codes go in `layout.tsx` metadata.verification (Google, Naver).
+
+### Courses Page
+Public course listing with related content:
+- **List page** (`/courses`): Displays all courses sorted by popularity (click count), with related question/news counts
+- **Detail page** (`/courses/[id]`): Shows course info, affiliate link, and lists related questions/news
+- **Related content lookup**: Uses PostgreSQL JSON operators via Prisma raw SQL:
+```typescript
+// Find questions related to a course (by affiliateUrl in JSON array)
+await prisma.$queryRaw`
+  SELECT * FROM "InterviewQuestion"
+  WHERE "isPublished" = true
+  AND EXISTS (
+    SELECT 1 FROM jsonb_array_elements("relatedCourses") as elem
+    WHERE elem->>'affiliateUrl' = ${course.affiliateUrl}
+  )
+`;
+
+// Find news related to a course (by courseId in JSON array)
+await prisma.$queryRaw`
+  SELECT * FROM "DailyNews"
+  WHERE EXISTS (
+    SELECT 1 FROM jsonb_array_elements("relatedCourses") as elem
+    WHERE elem->>'courseId' = ${course.id}
+  )
+`;
+```
 
 ### Daily News System
 Automated daily development news collection from GeekNews RSS:

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { fetchGeekNewsRss } from "@/lib/rss-parser";
-import { generateNewsSummary, matchRelatedCourses } from "@/lib/openai";
+import { generateNewsSummary, matchRelatedCourses } from "@/lib/gemini";
 
 // Vercel Cron 인증
 function verifyCronSecret(request: NextRequest): boolean {

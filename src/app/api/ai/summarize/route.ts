@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { generateSummary } from "@/lib/openai";
+import { generateSummary } from "@/lib/gemini";
 
 export async function POST(request: NextRequest) {
   const authenticated = await isAuthenticated();
@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error generating summary:", error);
 
-    if (error instanceof Error && error.message.includes("OPENAI_API_KEY")) {
+    if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
       return NextResponse.json(
-        { error: "OpenAI API 키가 설정되지 않았습니다." },
+        { error: "Gemini API 키가 설정되지 않았습니다." },
         { status: 500 }
       );
     }

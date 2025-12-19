@@ -1,18 +1,20 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function generateSummary(
   question: string,
   answer: string
 ): Promise<string> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY 환경변수가 설정되지 않았습니다.");
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  const prompt = `다음 개발자 면접 질문과 답안을 한 줄로 요약해주세요.
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+  const prompt = `당신은 개발자 면접 전문가입니다. 질문과 답안을 분석하여 핵심 내용을 간결하게 요약합니다.
+
+다음 개발자 면접 질문과 답안을 한 줄로 요약해주세요.
 핵심 키워드와 개념을 포함하고, 간결하게 작성하세요.
 
 질문: ${question}
@@ -21,35 +23,24 @@ export async function generateSummary(
 
 요약:`;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "당신은 개발자 면접 전문가입니다. 질문과 답안을 분석하여 핵심 내용을 간결하게 요약합니다.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    max_tokens: 200,
-    temperature: 0.7,
-  });
-
-  return response.choices[0]?.message?.content?.trim() || "";
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().trim();
 }
 
 export async function generateNewsSummary(
   title: string,
   description: string
 ): Promise<string> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY 환경변수가 설정되지 않았습니다.");
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  const prompt = `다음 개발 뉴스 기사를 한국어로 2-3문장으로 요약해주세요.
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+  const prompt = `당신은 개발자를 위한 뉴스 큐레이터입니다. 기술 트렌드와 실무 관련성을 중심으로 간결하게 요약합니다.
+
+다음 개발 뉴스 기사를 한국어로 2-3문장으로 요약해주세요.
 개발자가 왜 이 기사를 읽어야 하는지, 핵심 포인트가 무엇인지 설명하세요.
 
 제목: ${title}
@@ -58,24 +49,9 @@ export async function generateNewsSummary(
 
 요약:`;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "당신은 개발자를 위한 뉴스 큐레이터입니다. 기술 트렌드와 실무 관련성을 중심으로 간결하게 요약합니다.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    max_tokens: 300,
-    temperature: 0.5,
-  });
-
-  return response.choices[0]?.message?.content?.trim() || "";
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().trim();
 }
 
 interface CourseForMatching {
@@ -97,9 +73,16 @@ export async function matchRelatedCourses(
   newsSummary: string,
   courses: CourseForMatching[]
 ): Promise<MatchedCourse[]> {
-  if (!process.env.OPENAI_API_KEY || courses.length === 0) {
+  if (!process.env.GEMINI_API_KEY || courses.length === 0) {
     return [];
   }
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash-exp",
+    generationConfig: {
+      responseMimeType: "application/json",
+    },
+  });
 
   const courseList = courses
     .map(
@@ -108,7 +91,9 @@ export async function matchRelatedCourses(
     )
     .join("\n");
 
-  const prompt = `다음 개발 뉴스와 관련된 강의를 추천해주세요.
+  const prompt = `당신은 개발 교육 전문가입니다. 뉴스 내용과 강의의 관련성을 정확하게 판단합니다.
+
+다음 개발 뉴스와 관련된 강의를 추천해주세요.
 
 뉴스 제목: ${newsTitle}
 뉴스 요약: ${newsSummary}
@@ -124,25 +109,10 @@ JSON 형식으로만 응답하세요:
 관련 강의가 없으면 {"courses": []}을 반환하세요.`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "당신은 개발 교육 전문가입니다. 뉴스 내용과 강의의 관련성을 정확하게 판단합니다. JSON만 출력하세요.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_tokens: 200,
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text();
 
-    const content = response.choices[0]?.message?.content;
     if (!content) return [];
 
     const parsed = JSON.parse(content);
