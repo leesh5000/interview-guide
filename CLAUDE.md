@@ -43,7 +43,7 @@ npm run test:coverage     # Run tests with coverage report
 - **UI**: shadcn/ui components (Radix UI primitives) + Tailwind CSS v4
 - **Theming**: next-themes for dark/light mode support
 - **Markdown**: @uiw/react-md-editor for editing, react-markdown + @tailwindcss/typography for rendering
-- **AI**: Google Gemini API (gemini-2.0-flash-exp) for generating question summaries
+- **AI**: Google Gemini API (gemini-2.5-flash) for generating question summaries
 - **Testing**: Vitest + React Testing Library + jsdom
 
 ### Directory Structure

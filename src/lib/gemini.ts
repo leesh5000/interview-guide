@@ -10,7 +10,7 @@ export async function generateSummary(
     throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `당신은 개발자 면접 전문가입니다. 질문과 답안을 분석하여 핵심 내용을 간결하게 요약합니다.
 
@@ -36,7 +36,7 @@ export async function generateNewsSummary(
     throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `당신은 개발자를 위한 뉴스 큐레이터입니다. 기술 트렌드와 실무 관련성을 중심으로 간결하게 요약합니다.
 
@@ -78,7 +78,7 @@ export async function matchRelatedCourses(
   }
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
     },
