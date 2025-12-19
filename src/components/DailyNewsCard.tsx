@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
 import { BookOpen, Calendar, ExternalLink } from "lucide-react";
 import {
   Card,
@@ -58,8 +57,8 @@ export function DailyNewsCard({ news }: DailyNewsCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="text-xs md:text-sm leading-relaxed mb-3 text-muted-foreground prose prose-sm dark:prose-invert max-w-none prose-p:my-1">
-          <ReactMarkdown>{news.aiSummary}</ReactMarkdown>
+        <div className="text-xs md:text-sm leading-relaxed mb-3 text-muted-foreground line-clamp-4 overflow-hidden">
+          {news.aiSummary.replace(/\*\*/g, "").replace(/\n/g, " ")}
         </div>
 
         {news.relatedCourses.length > 0 && (
