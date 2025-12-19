@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Footer from "@/components/Footer";
 import { SEO_CONFIG } from "@/lib/seo";
 import { NewsDatePicker } from "@/components/NewsDatePicker";
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -40,25 +41,16 @@ export default async function NewsPage({
 }) {
   const params = await searchParams;
 
-  // KST 기준 오늘 날짜
-  const now = new Date();
-  const kstOffset = 9 * 60 * 60 * 1000;
-  const kstDate = new Date(now.getTime() + kstOffset);
-  const today = kstDate.toISOString().split("T")[0];
-
-  // 날짜 파라미터가 없으면 오늘 날짜를 기본값으로
-  const selectedDate = params.date ?? today;
-
   // 모든 뉴스 조회
   const allNews = await prisma.dailyNews.findMany({
     orderBy: { publishedAt: "desc" },
     take: 200,
   });
 
-  // 날짜별로 그룹화하여 날짜 목록 추출
+  // 날짜별로 그룹화하여 날짜 목록 추출 (로컬 시간대 기준)
   const dateSet = new Set<string>();
   allNews.forEach((item) => {
-    const dateKey = item.displayDate.toISOString().split("T")[0];
+    const dateKey = format(new Date(item.displayDate), "yyyy-MM-dd");
     dateSet.add(dateKey);
   });
 
@@ -66,10 +58,16 @@ export default async function NewsPage({
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   );
 
-  // 선택된 날짜에 해당하는 뉴스만 필터링
+  // 뉴스가 있는 가장 최근 날짜를 기본값으로
+  const latestDate = sortedDates[0] ?? null;
+
+  // 날짜 파라미터가 없으면 가장 최근 날짜를 기본값으로
+  const selectedDate = params.date ?? latestDate;
+
+  // 선택된 날짜에 해당하는 뉴스만 필터링 (로컬 시간대 기준)
   const filteredNews = selectedDate
     ? allNews.filter(
-        (item) => item.displayDate.toISOString().split("T")[0] === selectedDate
+        (item) => format(new Date(item.displayDate), "yyyy-MM-dd") === selectedDate
       )
     : allNews;
 

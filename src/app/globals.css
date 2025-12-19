@@ -198,3 +198,19 @@
     display: none;
   }
 }
+
+/* 뉴스가 있는 날짜에 점 표시 */
+.has-news-dot {
+  position: relative;
+}
+.has-news-dot::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #a855f7;
+}

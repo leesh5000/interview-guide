@@ -9,8 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { ko } from "date-fns/locale";
+import { format } from "date-fns";
 
 interface NewsDatePickerProps {
   selectedDate?: string;
@@ -29,25 +30,21 @@ export function NewsDatePicker({
     setMounted(true);
   }, []);
 
-  const currentDate = selectedDate ? new Date(selectedDate) : undefined;
+  const currentDate = selectedDate ? new Date(selectedDate + "T00:00:00") : undefined;
 
-  // 뉴스가 있는 날짜들을 Date 객체로 변환
+  // 뉴스가 있는 날짜들
   const availableDateSet = new Set(availableDates);
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = format(date, "yyyy-MM-dd");
       router.push(`/news?date=${dateStr}`);
     }
     setOpen(false);
   };
 
-  const handleClear = () => {
-    router.push("/news");
-  };
-
   const formatDisplayDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + "T00:00:00");
     return date.toLocaleDateString("ko-KR", {
       year: "numeric",
       month: "long",
@@ -56,10 +53,10 @@ export function NewsDatePicker({
     });
   };
 
-  // 뉴스가 있는 날짜만 선택 가능하도록
-  const isDateDisabled = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    return !availableDateSet.has(dateStr);
+  // 뉴스가 있는 날짜에 점 표시를 위한 modifiers
+  const hasNewsModifier = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return availableDateSet.has(dateStr);
   };
 
   if (!mounted) {
@@ -72,38 +69,31 @@ export function NewsDatePicker({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-[280px] justify-start text-left font-normal"
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? formatDisplayDate(selectedDate) : "날짜를 선택하세요"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={currentDate}
-            onSelect={handleSelect}
-            disabled={isDateDisabled}
-            locale={ko}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
-      {selectedDate && (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleClear}
-          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+          variant="outline"
+          className="w-[280px] justify-start text-left font-normal"
         >
-          <X className="h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selectedDate ? formatDisplayDate(selectedDate) : "날짜를 선택하세요"}
         </Button>
-      )}
-    </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={currentDate}
+          onSelect={handleSelect}
+          locale={ko}
+          modifiers={{
+            hasNews: hasNewsModifier,
+          }}
+          modifiersClassNames={{
+            hasNews: "has-news-dot",
+          }}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
