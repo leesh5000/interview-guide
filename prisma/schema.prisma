@@ -151,3 +151,18 @@ model DailyNews {
   @@index([displayDate])
   @@index([publishedAt])
 }
+
+// Cron 작업 실행 로그
+model CronLog {
+  id           String   @id @default(uuid())
+  jobName      String                    // 작업 이름 (daily-news 등)
+  status       String                    // 상태 (success, error)
+  message      String?  @db.Text         // 결과 메시지
+  processedCount Int    @default(0)      // 처리된 항목 수
+  errorDetail  String?  @db.Text         // 에러 상세 (실패 시)
+  duration     Int?                      // 실행 시간 (ms)
+  executedAt   DateTime @default(now())  // 실행 시간
+
+  @@index([jobName])
+  @@index([executedAt])
+}

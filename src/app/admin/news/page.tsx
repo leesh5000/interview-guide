@@ -12,6 +12,7 @@ import {
 import { isAuthenticated } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewsDeleteButton from "@/components/admin/NewsDeleteButton";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 export default async function AdminNewsPage() {
   const authenticated = await isAuthenticated();
@@ -20,9 +21,16 @@ export default async function AdminNewsPage() {
     redirect("/admin/login");
   }
 
-  const news = await prisma.dailyNews.findMany({
-    orderBy: { fetchedAt: "desc" },
-  });
+  const [news, cronLogs] = await Promise.all([
+    prisma.dailyNews.findMany({
+      orderBy: { fetchedAt: "desc" },
+    }),
+    prisma.cronLog.findMany({
+      where: { jobName: "daily-news" },
+      orderBy: { executedAt: "desc" },
+      take: 10,
+    }),
+  ]);
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -33,6 +41,73 @@ export default async function AdminNewsPage() {
         </Link>
       </div>
 
+      {/* 수집 이력 섹션 */}
+      <div className="mb-12">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          수집 이력
+        </h2>
+        {cronLogs.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground bg-card rounded-lg border border-border">
+            <p>아직 수집 이력이 없습니다.</p>
+          </div>
+        ) : (
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">상태</TableHead>
+                  <TableHead>실행 시간</TableHead>
+                  <TableHead>결과</TableHead>
+                  <TableHead>처리 건수</TableHead>
+                  <TableHead>소요 시간</TableHead>
+                  <TableHead>에러</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cronLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell>
+                      {log.status === "success" ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        {log.executedAt.toLocaleString("ko-KR", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </div>
+                    </TableCell>
+                    <TableCell>{log.message || "-"}</TableCell>
+                    <TableCell>{log.processedCount}개</TableCell>
+                    <TableCell>
+                      {log.duration
+                        ? `${(log.duration / 1000).toFixed(1)}초`
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-red-500">
+                      {log.errorDetail || "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* 뉴스 목록 섹션 */}
+      <h2 className="text-lg font-semibold text-foreground mb-4">
+        수집된 뉴스
+      </h2>
       {news.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p>아직 수집된 뉴스가 없습니다.</p>

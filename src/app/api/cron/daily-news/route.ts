@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const startTime = Date.now();
+
   try {
     // 1. RSS 피드 가져오기
     const feed = await fetchGeekNewsRss();
@@ -45,6 +47,17 @@ export async function POST(request: NextRequest) {
       .slice(0, maxNews - existingUrls.length);
 
     if (newItems.length === 0) {
+      const duration = Date.now() - startTime;
+      await prisma.cronLog.create({
+        data: {
+          jobName: "daily-news",
+          status: "success",
+          message: "새로운 뉴스 없음",
+          processedCount: 0,
+          duration,
+        },
+      });
+
       return NextResponse.json({
         message: "No new news to process",
         existingCount: existingUrls.length,
@@ -93,6 +106,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 성공 로그 저장
+    const duration = Date.now() - startTime;
+    await prisma.cronLog.create({
+      data: {
+        jobName: "daily-news",
+        status: "success",
+        message: `${results.length}개 뉴스 수집 완료`,
+        processedCount: results.length,
+        duration,
+      },
+    });
+
     return NextResponse.json({
       message: "Daily news updated",
       processed: results.length,
@@ -100,6 +125,20 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Cron job failed:", error);
+
+    // 실패 로그 저장
+    const duration = Date.now() - startTime;
+    await prisma.cronLog.create({
+      data: {
+        jobName: "daily-news",
+        status: "error",
+        message: "뉴스 수집 실패",
+        processedCount: 0,
+        errorDetail: error instanceof Error ? error.message : String(error),
+        duration,
+      },
+    });
+
     return NextResponse.json(
       { error: "뉴스 수집에 실패했습니다." },
       { status: 500 }
