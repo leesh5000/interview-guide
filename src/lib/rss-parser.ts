@@ -9,13 +9,31 @@ export interface RssItem {
 export interface RssFeed {
   title: string;
   description: string;
+  link: string;
   items: RssItem[];
 }
 
-const RSS_FEED_URL = "https://news.hada.io/rss/news";
+// RSS 소스 정의
+export const RSS_SOURCES = {
+  GEEK_NEWS: {
+    url: "https://news.hada.io/rss/news",
+    sourceUrl: "https://news.hada.io",
+    name: "GeekNews",
+  },
+  HACKER_NEWS: {
+    url: "https://news.ycombinator.com/rss",
+    sourceUrl: "https://news.ycombinator.com",
+    name: "Hacker News",
+  },
+} as const;
 
-export async function fetchGeekNewsRss(): Promise<RssFeed> {
-  const response = await fetch(RSS_FEED_URL, {
+export type RssSourceKey = keyof typeof RSS_SOURCES;
+
+// 범용 RSS 피드 함수
+export async function fetchRssFeed(sourceKey: RssSourceKey): Promise<RssFeed> {
+  const source = RSS_SOURCES[sourceKey];
+
+  const response = await fetch(source.url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (compatible; DevInterview/1.0)",
       Accept: "application/atom+xml, application/rss+xml, application/xml, text/xml",
@@ -32,13 +50,23 @@ export async function fetchGeekNewsRss(): Promise<RssFeed> {
 
   // Atom 형식인지 RSS 형식인지 확인
   if (xml.includes("<feed") && xml.includes("<entry>")) {
-    return parseAtomXml(xml);
+    return parseAtomXml(xml, source.sourceUrl);
   }
-  return parseRssXml(xml);
+  return parseRssXml(xml, source.sourceUrl);
+}
+
+// 기존 함수 유지 (하위 호환성)
+export async function fetchGeekNewsRss(): Promise<RssFeed> {
+  return fetchRssFeed("GEEK_NEWS");
+}
+
+// Hacker News 피드 함수
+export async function fetchHackerNewsRss(): Promise<RssFeed> {
+  return fetchRssFeed("HACKER_NEWS");
 }
 
 // Atom 형식 파싱 (GeekNews가 사용하는 형식)
-function parseAtomXml(xml: string): RssFeed {
+function parseAtomXml(xml: string, sourceUrl: string): RssFeed {
   const getTagContent = (tag: string, text: string): string | undefined => {
     const match = text.match(
       new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`)
@@ -50,7 +78,7 @@ function parseAtomXml(xml: string): RssFeed {
   if (!feedMatch) throw new Error("Invalid Atom: no feed found");
 
   const feedContent = feedMatch[1];
-  const title = decodeHtmlEntities(getTagContent("title", feedContent)) || "GeekNews";
+  const title = decodeHtmlEntities(getTagContent("title", feedContent)) || "Feed";
   const description = decodeHtmlEntities(getTagContent("subtitle", feedContent)) || "";
 
   const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
@@ -77,11 +105,11 @@ function parseAtomXml(xml: string): RssFeed {
     });
   }
 
-  return { title, description, items };
+  return { title, description, link: sourceUrl, items };
 }
 
-// RSS 형식 파싱 (fallback)
-function parseRssXml(xml: string): RssFeed {
+// RSS 형식 파싱 (Hacker News 등)
+function parseRssXml(xml: string, sourceUrl: string): RssFeed {
   const getTagContent = (tag: string, text: string): string | undefined => {
     const match = text.match(
       new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`)
@@ -93,7 +121,7 @@ function parseRssXml(xml: string): RssFeed {
   if (!channelMatch) throw new Error("Invalid RSS: no channel found");
 
   const channelContent = channelMatch[1];
-  const title = getTagContent("title", channelContent) || "GeekNews";
+  const title = getTagContent("title", channelContent) || "Feed";
   const description = getTagContent("description", channelContent) || "";
 
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
@@ -111,7 +139,7 @@ function parseRssXml(xml: string): RssFeed {
     });
   }
 
-  return { title, description, items };
+  return { title, description, link: sourceUrl, items };
 }
 
 function decodeHtmlEntities(text?: string): string {

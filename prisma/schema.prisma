@@ -166,3 +166,17 @@ model CronLog {
   @@index([jobName])
   @@index([executedAt])
 }
+
+// RSS 소스 설정
+model RssSource {
+  id          String   @id @default(uuid())
+  key         String   @unique           // 소스 키 (GEEK_NEWS, HACKER_NEWS 등)
+  name        String                     // 표시 이름
+  url         String                     // RSS 피드 URL
+  sourceUrl   String                     // 소스 사이트 URL
+  isEnabled   Boolean  @default(true)    // 활성화 여부
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isEnabled])
+}

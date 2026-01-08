@@ -13,6 +13,7 @@ import { isAuthenticated } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import NewsDeleteButton from "@/components/admin/NewsDeleteButton";
 import ManualNewsCollectButton from "@/components/admin/ManualNewsCollectButton";
+import RssSourceManager from "@/components/admin/RssSourceManager";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 export default async function AdminNewsPage() {
@@ -38,6 +39,14 @@ export default async function AdminNewsPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-semibold text-foreground">뉴스 관리</h1>
         <ManualNewsCollectButton />
+      </div>
+
+      {/* RSS 소스 관리 섹션 */}
+      <div className="mb-12">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          RSS 소스 설정
+        </h2>
+        <RssSourceManager />
       </div>
 
       {/* 수집 이력 섹션 */}
